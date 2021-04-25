@@ -1,0 +1,33 @@
+---
+title: new post
+author: A. Solomon Kurz
+date: '2021-04-25'
+slug: ''
+categories: []
+tags:
+  - R
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2021-04-25T16:24:40-07:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+Load
+
+```{r, warning = F, message = F}
+library(tidyverse)
+```
+
+plot
+
+```{r}
+mtcars %>% 
+  ggplot(aes(mpg)) +
+  geom_histogram(bins = 25)
+```

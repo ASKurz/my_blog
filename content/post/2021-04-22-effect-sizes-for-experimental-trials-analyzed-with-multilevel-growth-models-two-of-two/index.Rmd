@@ -1,0 +1,98 @@
+---
+title: 'Effect sizes for experimental trials analyzed with multilevel growth models:
+  Two of two'
+author: A. Solomon Kurz
+date: '2021-04-22'
+slug: ''
+categories: []
+tags:
+  - Bayesian
+  - brms
+  - effect size
+  - longitudinal
+  - multilevel
+  - R
+  - tidyverse
+  - tutorial
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2021-04-25T18:42:38-07:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+adjust the global plotting theme defaults.
+
+```{r, warning = F, message = F}
+library(brms)
+library(tidybayes)
+library(tidyverse)
+
+# adjust the global plotting theme
+theme_set(
+  theme_linedraw() +
+    theme(text = element_text(family = "Times"),
+          panel.grid = element_blank(),
+          strip.text = element_text(margin = margin(b = 3, t = 3)))
+)
+```
+
+### We need data.
+
+Once again, we use the [tribble](https://tibble.tidyverse.org/reference/tribble.html) approach to enter the synthetic data Feingold displayed in his Table 1 (p. 46).
+
+```{r}
+d <-
+  tribble(
+    ~id, ~tx, ~t1, ~t2, ~t3, ~t4,
+    101, -0.5, 3, 5, 5,  7,
+    102, -0.5, 4, 4, 6,  6,
+    103, -0.5, 4, 5, 7,  8,
+    104, -0.5, 5, 6, 6,  8,
+    105, -0.5, 5, 6, 7,  8,
+    106, -0.5, 5, 7, 7,  7,
+    107, -0.5, 5, 6, 8,  8,
+    108, -0.5, 6, 6, 7,  9,
+    109, -0.5, 6, 8, 9,  10,
+    110, -0.5, 7, 7, 8,  9,
+    111,  0.5, 3, 5, 7,  9,
+    112,  0.5, 4, 7, 9,  11,
+    113,  0.5, 4, 6, 8,  11,
+    114,  0.5, 5, 7, 9,  10,
+    115,  0.5, 5, 6, 9,  11,
+    116,  0.5, 5, 7, 10, 10,
+    117,  0.5, 5, 8, 8,  11,
+    118,  0.5, 6, 7, 9,  12,
+    119,  0.5, 6, 9, 11, 13,
+    120,  0.5, 7, 8, 10, 12
+  ) %>% 
+  mutate(`t4-t1`   = t4 - t1,
+         condition = ifelse(tx == -0.5, "control", "treatment"))
+
+# inspect the first six rows
+head(d)
+```
+
+To reacquaint ourselves with the data, we might make a plot. Last time we plotted a subset of the individual trajectories next to the averages, by treatment group. Here we'll superimpose all the individual-level trajectories atop the group averages.
+
+```{r fig1, fig.width = 6.5, fig.height = 3.75}
+d %>% 
+  pivot_longer(t1:t4) %>% 
+  mutate(time      = str_extract(name, "\\d") %>% as.double(),
+         condition = ifelse(tx < 0, "tx = -0.5 (control)", "tx = 0.5 (treatment)")) %>% 
+  
+  ggplot(aes(x = time, y = value)) +
+  stat_smooth(aes(color = condition),
+              method = "lm", formula = 'y ~ x',
+              se = F, size = 4) +
+  geom_line(aes(group = id),
+            size = 1/4) +
+  scale_color_viridis_d(end = .75, direction = -1, breaks = NULL) +
+  facet_wrap(~ condition)
+  
+```

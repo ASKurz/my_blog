@@ -1,0 +1,100 @@
+---
+title: 'Effect sizes for experimental trials analyzed with multilevel growth models:
+  Two of two'
+author: A. Solomon Kurz
+date: '2021-04-22'
+slug: ''
+categories: []
+tags:
+  - Bayesian
+  - brms
+  - effect size
+  - longitudinal
+  - multilevel
+  - R
+  - tidyverse
+  - tutorial
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2021-04-25T18:42:38-07:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>adjust the global plotting theme defaults.</p>
+<pre class="r"><code>library(brms)
+library(tidybayes)
+library(tidyverse)
+
+# adjust the global plotting theme
+theme_set(
+  theme_linedraw() +
+    theme(text = element_text(family = &quot;Times&quot;),
+          panel.grid = element_blank(),
+          strip.text = element_text(margin = margin(b = 3, t = 3)))
+)</code></pre>
+<div id="we-need-data." class="section level3">
+<h3>We need data.</h3>
+<p>Once again, we use the <a href="https://tibble.tidyverse.org/reference/tribble.html">tribble</a> approach to enter the synthetic data Feingold displayed in his Table 1 (p. 46).</p>
+<pre class="r"><code>d &lt;-
+  tribble(
+    ~id, ~tx, ~t1, ~t2, ~t3, ~t4,
+    101, -0.5, 3, 5, 5,  7,
+    102, -0.5, 4, 4, 6,  6,
+    103, -0.5, 4, 5, 7,  8,
+    104, -0.5, 5, 6, 6,  8,
+    105, -0.5, 5, 6, 7,  8,
+    106, -0.5, 5, 7, 7,  7,
+    107, -0.5, 5, 6, 8,  8,
+    108, -0.5, 6, 6, 7,  9,
+    109, -0.5, 6, 8, 9,  10,
+    110, -0.5, 7, 7, 8,  9,
+    111,  0.5, 3, 5, 7,  9,
+    112,  0.5, 4, 7, 9,  11,
+    113,  0.5, 4, 6, 8,  11,
+    114,  0.5, 5, 7, 9,  10,
+    115,  0.5, 5, 6, 9,  11,
+    116,  0.5, 5, 7, 10, 10,
+    117,  0.5, 5, 8, 8,  11,
+    118,  0.5, 6, 7, 9,  12,
+    119,  0.5, 6, 9, 11, 13,
+    120,  0.5, 7, 8, 10, 12
+  ) %&gt;% 
+  mutate(`t4-t1`   = t4 - t1,
+         condition = ifelse(tx == -0.5, &quot;control&quot;, &quot;treatment&quot;))
+
+# inspect the first six rows
+head(d)</code></pre>
+<pre><code>## # A tibble: 6 x 8
+##      id    tx    t1    t2    t3    t4 `t4-t1` condition
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;    
+## 1   101  -0.5     3     5     5     7       4 control  
+## 2   102  -0.5     4     4     6     6       2 control  
+## 3   103  -0.5     4     5     7     8       4 control  
+## 4   104  -0.5     5     6     6     8       3 control  
+## 5   105  -0.5     5     6     7     8       3 control  
+## 6   106  -0.5     5     7     7     7       2 control</code></pre>
+<p>To reacquaint ourselves with the data, we might make a plot. Last time we plotted a subset of the individual trajectories next to the averages, by treatment group. Here we’ll superimpose all the individual-level trajectories atop the group averages.</p>
+<pre class="r"><code>d %&gt;% 
+  pivot_longer(t1:t4) %&gt;% 
+  mutate(time      = str_extract(name, &quot;\\d&quot;) %&gt;% as.double(),
+         condition = ifelse(tx &lt; 0, &quot;tx = -0.5 (control)&quot;, &quot;tx = 0.5 (treatment)&quot;)) %&gt;% 
+  
+  ggplot(aes(x = time, y = value)) +
+  stat_smooth(aes(color = condition),
+              method = &quot;lm&quot;, formula = &#39;y ~ x&#39;,
+              se = F, size = 4) +
+  geom_line(aes(group = id),
+            size = 1/4) +
+  scale_color_viridis_d(end = .75, direction = -1, breaks = NULL) +
+  facet_wrap(~ condition)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/fig1-1.png" width="624" /></p>
+</div>
